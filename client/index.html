@@ -1,0 +1,182 @@
+<html>
+<script src="jquery.min.js"></script>
+<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+
+<style>
+#grid td {
+  width: 5em;
+  height: 5em;
+  background-color: #d6c8ae;
+  border: 2px solid #d6c8ae;
+  text-align: center;
+  
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+
+#grid td.red {
+  background-color: red;
+  border-color: red;
+}
+#grid td.blue {
+  background-color: blue;
+  border-color: blue;
+}
+#grid td.black {
+  background-color: #000;
+  border-color: #000;
+  color: white;
+}
+#grid td.grey {
+  background-color: #888;
+  border-color: #888;
+}
+
+#grid td.selfVoted {
+  border: 2px solid black;
+}
+
+table.red#grid  {
+  background-color: #fcc;
+}
+table.blue#grid  {
+  background-color: #ccf;
+}
+table#grid {
+  padding: 2em;
+}
+
+</style>
+
+<script>
+$(function() {
+  var $grid = $('#grid');
+  
+  var gameId = (window.location.href.match('.*#([0-9a-f]+)$')||[])[1];
+  console.log(gameId);
+  
+  var socket = io();
+  
+  function CellState(index) {
+    this.index = index;
+  }
+  
+  var cells = [];
+  var votedFor = null;
+  
+  for (var i=0; i<25; i++) {
+    cells[i] = new CellState(i);
+  }
+  
+  
+  for (var y=0; y<5; y++) {
+    var $row = $('<tr>');
+    for (var x=0; x<5; x++) {
+      var $cell = $('<td>').append($('#cellTemplate').clone());
+      
+      $cell.click(onCellClicked.bind(cells[y*5+x]));
+      
+      $row.append($cell);
+      cells[y*5+x].$elem = $cell;
+    }
+    $grid.append($row);
+  }
+  
+  function loadState(states) {
+    for (var i=0; i<cells.length; i++) {
+      var state = states[i];
+      cells[i].$elem.find('.voteBar').css('width', Math.round(state.voteProgress*100) + '%');
+      cells[i].$elem.find('.label').text(state.word);
+      var colors = ['red', 'blue', 'black', 'grey'];
+      for (var c=0; c<colors.length; c++) {
+        if (state.color == colors[c]) {
+          cells[i].$elem.addClass(colors[c]);
+        } else {
+          cells[i].$elem.removeClass(colors[c]);
+        }
+      }
+      cells[i].state = state;
+    }
+  }
+  
+  function onCellClicked(e) {
+    e.preventDefault();
+    
+    var initialVotedFor = votedFor;
+    
+    if (votedFor) votedFor.$elem.removeClass('selfVoted')
+    if (votedFor==this || this.state.color) {
+      votedFor = null;
+    } else {
+      votedFor = this;
+      this.$elem.addClass('selfVoted');
+    }
+    
+    if (initialVotedFor!=votedFor) {
+      socket.emit('vote', votedFor ? votedFor.index : null);
+    }
+    
+    return false;
+  }
+  
+  loadState([
+    {word: "Asleep", color: null, voteProgress: 0.0},
+    {word: "Astronaut", color: null, voteProgress: 0.5},
+    {word: "Athlete", color: 'red', voteProgress: 0.0},
+    {word: "Atlantis", color: null, voteProgress: 0.0},
+    {word: "Aunt", color: null, voteProgress: 0.0},
+    {word: "Avocado", color: 'blue', voteProgress: 0.0},
+    {word: "Baby-Sitter", color: 'grey', voteProgress: 0.0},
+    {word: "Backbone", color: 'black', voteProgress: 1.0},
+    {word: "Bag", color: null, voteProgress: 0.0},
+    {word: "Baguette", color: null, voteProgress: 0.0},
+    {word: "Bald", color: null, voteProgress: 0.0},
+    {word: "Balloon", color: null, voteProgress: 0.0},
+    {word: "Banana", color: null, voteProgress: 0.0},
+    {word: "Banister", color: null, voteProgress: 0.0},
+    {word: "Baseball", color: null, voteProgress: 0.0},
+    {word: "Baseboards", color: null, voteProgress: 0.0},
+    {word: "Basketball", color: null, voteProgress: 0.0},
+    {word: "Bat", color: null, voteProgress: 0.0},
+    {word: "Battery", color: null, voteProgress: 0.0},
+    {word: "Beach", color: null, voteProgress: 0.0},
+    {word: "Beanstalk", color: null, voteProgress: 0.0},
+    {word: "Bedbug", color: null, voteProgress: 0.0},
+    {word: "Beer", color: null, voteProgress: 0.0},
+    {word: "Beethoven", color: null, voteProgress: 0.0},
+    {word: "Belt", color: null, voteProgress: 0.0},
+  ]);
+  
+  socket.emit('joinGame', gameId);
+  
+  socket.on('stateUpdate', loadState);
+  socket.on('youAreOn', function(team) {
+    $('#grid').removeClass('red').removeClass('blue').addClass(team);
+  });
+});
+
+
+</script>
+
+<div style='display:none'>
+  <div id='cellTemplate'>
+    <span class='label'>
+    
+    </span>
+    <div class='voteBar' style='width:50%;background-color:green;height:.5em'>
+      
+    </div>
+  </div>
+</div>
+
+<table id="grid">
+
+</table>
+
+
+</html>
