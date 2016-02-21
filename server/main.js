@@ -42,17 +42,39 @@ function randomWords() {
   return result;
 }
 
+function CellState(word) {
+  this.word = word;
+  this.color = Math.random()>.5 ? 'red' : 'blue';
+  this.revealed = false;
+}
+
 function Game(id) {
   this.id = id;
   this.votes = {};
-  this.voterCounts = {red: 0, blue: 0};
+  this.voters = {red: [], blue: []};
   this.votingTeam = 'red';
+  this.spyMasterFor = {red: null, blue: null};
   
-  this.words = randomWords();
+  this.cells = [];
+  var words = randomWords();
+  var colorPalette = [];
+  for (var i=0; i<9; i++) colorPalette.push('red');
+  for (var i=0; i<8; i++) colorPalette.push('blue');
+  for (var i=0; i<7; i++) colorPalette.push('grey');
+  for (var i=0; i<1; i++) colorPalette.push('black');
+  
+  for (var i=0; i<words.length; i++) {
+    this.cells.push(new CellState(words[i]));
+    
+    var idx = Math.floor(Math.random()*colorPalette.length);
+    this.cells[i].color = colorPalette[idx];
+    colorPalette.splice(idx, 1);
+  }
+  this.cells.push(new CellState('Pass'));
 }
-Game.prototype.makeState = function() {
+Game.prototype.makeCellState = function(revealAll) {
   var votesFor = [];
-  for (var i=0; i<25; i++) {
+  for (var i=0; i<this.cells.length; i++) {
     votesFor[i] = 0;
   }
   for (var vote in this.votes) {
@@ -60,15 +82,49 @@ Game.prototype.makeState = function() {
   }
   
   var state = [];
-  for (var i=0; i<25; i++) {
+  for (var i=0; i<this.cells.length; i++) {
     state[i] = {
-      word: this.words[i],
-      voteProgress: votesFor[i] / Math.max(1, this.voterCounts[this.votingTeam]),
-      color: null
+      word: this.cells[i].word,
+      voteProgress: votesFor[i] / Math.max(1, this.voters[this.votingTeam].length),
+      color: revealAll||this.cells[i].revealed ? this.cells[i].color : null
     }
   };
   
   return state;
+}
+Game.prototype.makeState = function() {
+  return {
+    cells: this.makeCellState(),
+    playingTeam: this.votingTeam,
+  }
+}
+
+Game.prototype.detectMajorityFor = function(index) {
+  var votesFor = 0;
+  for (var vote in this.votes) {
+    if (this.votes[vote] == index) votesFor++;
+  }
+  
+  var votesRequired = this.voters[this.votingTeam].length;
+  if (votesFor >= votesRequired) {
+    
+    var guessedColor;
+    if (index < 25) {
+      this.cells[index].revealed = true;
+      
+      guessedColor = this.cells[index].color;
+    }
+    
+    if (guessedColor == this.votingTeam) {
+      
+    } else if (guessedColor == 'black') {
+      
+    } else {
+      this.votingTeam = this.votingTeam=='red' ? 'blue' : 'red';
+    }
+    
+    this.votes = {};
+  }
 }
 
 Game.prototype.broadcastState = function() {
@@ -99,19 +155,29 @@ io.sockets.on('connection', function (socket) {
   socket.once('joinGame', function(gameId) {
     game = GAMES[gameId];
     socket.join('game' + gameId);
-    var team = game.voterCounts['red'] <= game.voterCounts['blue'] ? 'red' : 'blue';
-    game.voterCounts[team]++;
+    var team = game.voters['red'].length <= game.voters['blue'].length ? 'red' : 'blue';
+    
+    if (game.spyMasterFor[team]==null) {
+      game.spyMasterFor[team] = playerId;
+    } else {
+      game.voters[team].push(playerId);
+    }
     
     socket.emit('youAreOn', team);
     socket.emit('stateUpdate', game.makeState());
     
+    if (game.spyMasterFor[team] == playerId) {
+      socket.emit('showWordList', game.makeCellState(true));
+    }
+    
     socket.on('vote', function(votedForIndex) {
       console.log('vote cast for ', team, game.votingTeam);
-      if (team != game.votingTeam) {
+      if (team != game.votingTeam || playerId == game.spyMasterFor[team]) {
         return;
       }
       game.votes[playerId] = votedForIndex;
       
+      game.detectMajorityFor(votedForIndex);
       console.log('Sqeeee! Player', playerId, 'voted for', votedForIndex)
       
       game.broadcastState();
@@ -119,7 +185,10 @@ io.sockets.on('connection', function (socket) {
     
     socket.once('disconnect', function() {
       console.log('socket disconnected');
-      game.voterCounts[team]--;
+      var voterIdx = game.voters[team].indexOf(playerId);
+      if (voterIdx>=0) {
+        game.voters[team].splice(voterIdx, 1);
+      }
       game.broadcastState();
     });
   });
