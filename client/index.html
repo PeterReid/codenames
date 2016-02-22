@@ -3,13 +3,20 @@
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 
 <style>
+    body {
+        font-family: Helvetica;
+    }
+
 #grid td {
-  width: 5em;
+  font-weight: bold;
+  letter-spacing: 1px;
+  width: 10em;
   height: 5em;
   background-color: #d6c8ae;
-  border: 2px solid #d6c8ae;
+  border: 2px solid #ccbea3;
   text-align: center;
-  
+  border-radius: 10px;
+
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -18,22 +25,29 @@
   user-select: none;
 }
 
+#grid td {
+    cursor: pointer;
+}
+
+#grid td:hover {
+    box-shadow: 0px 0px 5px;
+}
 
 #grid td.red {
-  background-color: red;
+  background-color: #ff8880;
   border-color: red;
 }
 #grid td.blue {
-  background-color: blue;
+  background-color: #969eff;
   border-color: blue;
 }
 #grid td.black {
-  background-color: #000;
+  background-color: #3b3b3b;
   border-color: #000;
   color: white;
 }
 #grid td.grey {
-  background-color: #888;
+  background-color: #aeaeae;
   border-color: #888;
 }
 
@@ -43,9 +57,11 @@
 
 table.red#grid  {
   background-color: #fcc;
+  border-radius: 20px;
 }
 table.blue#grid  {
   background-color: #ccf;
+  border-radius: 20px;
 }
 table#grid {
   padding: 2em;
@@ -56,6 +72,11 @@ table#grid {
   border: 2px solid black;
   background-color: #eee;
   text-align: center;
+  border-radius: 10px;
+}
+
+#passHolder td:hover {
+    box-shadow: 0px 0px 5px;
 }
 
 </style>
@@ -107,7 +128,7 @@ $(function() {
     for (var i=0; i<cells.length; i++) {
       var cellState = state.cells[i];
       cells[i].$elem.find('.voteBar').css('width', Math.round(cellState.voteProgress*100) + '%');
-      cells[i].$elem.find('.label').text(cellState.word);
+      cells[i].$elem.find('.label').text(cellState.word.toUpperCase());
       var colors = ['red', 'blue', 'black', 'grey'];
       for (var c=0; c<colors.length; c++) {
         if (cellState.color == colors[c]) {
