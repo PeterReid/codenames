@@ -1,0 +1,75 @@
+body {
+    font-family: Helvetica;
+}
+
+#grid td {
+    font-weight: bold;
+    letter-spacing: 1px;
+    width: 10em;
+    height: 5em;
+    background-color: #d6c8ae;
+    border: 2px solid #ccbea3;
+    text-align: center;
+    border-radius: 10px;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#grid td {
+    cursor: pointer;
+}
+
+#grid td:hover {
+    box-shadow: 0px 0px 5px;
+}
+
+#grid td.red {
+    background-color: #ff8880;
+    border-color: red;
+}
+#grid td.blue {
+    background-color: #969eff;
+    border-color: blue;
+}
+#grid td.black {
+    background-color: #3b3b3b;
+    border-color: #000;
+    color: white;
+}
+#grid td.grey {
+    background-color: #aeaeae;
+    border-color: #888;
+}
+
+#grid td.selfVoted {
+    border: 2px solid black;
+}
+
+table.red#grid  {
+    background-color: #fcc;
+    border-radius: 20px;
+}
+table.blue#grid  {
+    background-color: #ccf;
+    border-radius: 20px;
+}
+table#grid {
+    padding: 2em;
+}
+
+#passHolder td {
+    width:10em;
+    border: 2px solid black;
+    background-color: #eee;
+    text-align: center;
+    border-radius: 10px;
+}
+
+#passHolder td:hover {
+    box-shadow: 0px 0px 5px;
+}
