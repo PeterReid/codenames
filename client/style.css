@@ -74,3 +74,10 @@ table#grid {
 #passHolder td:hover {
     box-shadow: 0px 0px 5px;
 }
+
+#playerList .player.blue {
+    background-color: blue;
+}
+#playerList .player.red {
+    background-color: red;
+}

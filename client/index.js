@@ -56,14 +56,28 @@ $(function() {
       cells[i].state = cellState;
     }
 
-
-
     if (playingTeam == myTeam) {
       $('#waitingIndicator').hide();
     } else {
       $('#waitingIndicator').show();
     }
+
+    var $playerList = $('#playerList');
+    $playerList.find("tr").remove();
+    var $tbody = $("<tbody></tbody>");
+    for (var i=0; i<state.voters['red'].length; i++) {
+      var voter = state.voters['red'][i];
+      $tbody.append("<tr><td class='player red'>" + voter + "</td></tr>");
+    }
+    for (var i=0; i<state.voters['blue'].length; i++) {
+      var voter = state.voters['blue'][i];
+      $tbody.append("<tr><td class='player blue'>" + voter + "</td></tr>");
+    }
+    $playerList.append($tbody);
+
   }
+
+
 
   function onCellClicked(e) {
     console.log('click!');
