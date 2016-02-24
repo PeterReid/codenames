@@ -68,6 +68,7 @@ table#grid {
     background-color: #eee;
     text-align: center;
     border-radius: 10px;
+    cursor: pointer;
 }
 
 #passHolder td:hover {

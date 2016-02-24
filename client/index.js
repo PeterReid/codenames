@@ -1,6 +1,4 @@
 $(function() {
-
-  console.log('loaded from server');
   var $grid = $('#grid');
 
   var gameId = (window.location.href.match('.*#([0-9a-f]+)$')||[])[1];
