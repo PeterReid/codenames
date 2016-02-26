@@ -12,14 +12,27 @@ var server = http.createServer(function(req, res) {
   var staticFiles = {
     '/jquery.min.js': true,
     '/': true,
+    '/index.js': true,
+    '/style.css': true,
   };
+
+  var staticFileType = {
+    '.js': 'application/javascript',
+    '.css': 'text/css',
+  }
   
   if (staticFiles[req.url]) {
     var path = req.url;
     if (path == '/') path='/index.html';
     path = '../client' + path;
-    
-    res.writeHeader(200, {'Content-Type': 'text/html'});
+
+    var contentType = 'text/html';
+    var fileType = req.url.slice(req.url.lastIndexOf('.'));
+    if (staticFileType[fileType]) {
+      contentType = staticFileType[fileType];
+    }
+
+    res.writeHeader(200, {'Content-Type': contentType});
     fs.createReadStream(path).pipe(res);
   } else {
     res.writeHeader(404);
@@ -96,6 +109,8 @@ Game.prototype.makeState = function() {
   return {
     cells: this.makeCellState(),
     playingTeam: this.votingTeam,
+    spyMasters: this.spyMasterFor,
+    voters: this.voters
   }
 }
 

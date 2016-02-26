@@ -1,183 +1,10 @@
 <html>
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
 <script src="jquery.min.js"></script>
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-
-<style>
-#grid td {
-  width: 5em;
-  height: 5em;
-  background-color: #d6c8ae;
-  border: 2px solid #d6c8ae;
-  text-align: center;
-  
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-
-#grid td.red {
-  background-color: red;
-  border-color: red;
-}
-#grid td.blue {
-  background-color: blue;
-  border-color: blue;
-}
-#grid td.black {
-  background-color: #000;
-  border-color: #000;
-  color: white;
-}
-#grid td.grey {
-  background-color: #888;
-  border-color: #888;
-}
-
-#grid td.selfVoted {
-  border: 2px solid black;
-}
-
-table.red#grid  {
-  background-color: #fcc;
-}
-table.blue#grid  {
-  background-color: #ccf;
-}
-table#grid {
-  padding: 2em;
-}
-
-#passHolder td {
-  width:10em;
-  border: 2px solid black;
-  background-color: #eee;
-  text-align: center;
-}
-
-</style>
-
-<script>
-$(function() {
-  var $grid = $('#grid');
-  
-  var gameId = (window.location.href.match('.*#([0-9a-f]+)$')||[])[1];
-  console.log(gameId);
-  
-  var socket = io();
-  
-  function CellState(index) {
-    this.index = index;
-  }
-  
-  var cells = [];
-  var votedFor = null;
-  var myTeam = null;
-  var playingTeam = null;
-  
-  for (var i=0; i<26; i++) {
-    cells[i] = new CellState(i);
-  }
-  
-  
-  for (var y=0; y<5; y++) {
-    var $row = $('<tr>');
-    for (var x=0; x<5; x++) {
-      var $cell = $('<td>').append($('#cellTemplate').clone());
-      
-      $cell.click(onCellClicked.bind(cells[y*5+x]));
-      
-      $row.append($cell);
-      cells[y*5+x].$elem = $cell;
-    }
-    $grid.append($row);
-  }
-  
-  var $passElem = $("<td>").append( $('#cellTemplate').clone() );
-  $('#passHolder').append($passElem);
-  $passElem.click(onCellClicked.bind(cells[25]));
-  cells[25].$elem = $passElem;
-  
-  function loadState(state) {
-    playingTeam = state.playingTeam;
-    var cellStates = state.cells;
-    for (var i=0; i<cells.length; i++) {
-      var cellState = state.cells[i];
-      cells[i].$elem.find('.voteBar').css('width', Math.round(cellState.voteProgress*100) + '%');
-      cells[i].$elem.find('.label').text(cellState.word);
-      var colors = ['red', 'blue', 'black', 'grey'];
-      for (var c=0; c<colors.length; c++) {
-        if (cellState.color == colors[c]) {
-          cells[i].$elem.addClass(colors[c]);
-        } else {
-          cells[i].$elem.removeClass(colors[c]);
-        }
-      }
-      cells[i].state = cellState;
-    }
-    
-    if (playingTeam == myTeam) {
-      $('#waitingIndicator').hide();
-    } else {
-      $('#waitingIndicator').show();
-    }
-  }
-  
-  function onCellClicked(e) {
-    console.log('click!');
-    e.preventDefault();
-    
-    var initialVotedFor = votedFor;
-    
-    if (votedFor) votedFor.$elem.removeClass('selfVoted')
-    if (votedFor==this || this.state.color) {
-      votedFor = null;
-    } else {
-      votedFor = this;
-      this.$elem.addClass('selfVoted');
-    }
-    
-    if (initialVotedFor!=votedFor) {
-      socket.emit('vote', votedFor ? votedFor.index : null);
-    }
-    
-    return false;
-  }
-  
-  function showWordList(states) {
-    $('#wordlist').show();
-    console.log(states);
-    for (var i=0; i<states.length; i++) {
-      var appendTo = null;
-      switch (states[i].color) {
-        case myTeam: appendTo = 'mineList'; break;
-        case 'grey': appendTo = 'neutralList'; break;
-        case 'black': appendTo = 'assassinList'; break;
-        default: appendTo = 'enemyList'; break;
-      }
-      
-      console.log(states[i]);
-      $('#' + appendTo).append( $('<div>').text(states[i].word) );
-    }
-  }
-  
-  socket.emit('joinGame', gameId);
-  
-  socket.on('stateUpdate', loadState);
-  socket.on('youAreOn', function(team) {
-    myTeam = team;
-    $('#grid').removeClass('red').removeClass('blue').addClass(team);
-    $('#wordlist').hide();
-  });
-  socket.on('showWordList', showWordList);
-  
-});
-
-
-</script>
+<script src="index.js"></script>
 
 <div style='display:none'>
   <div id='cellTemplate'>
@@ -191,16 +18,20 @@ $(function() {
 </div>
 
 <div style='float:left;margin-right:3em;'>
-<table id="grid">
+    <table id="grid"></table>
 
-</table>
+    <table style='padding:1em; width:100%'><tr id='passHolder'>
 
-<table><tr id='passHolder'>
-  
-</tr></table>
+    </tr></table>
+</div>
 
-<div id='waitingIndicator'>Waiting for the other team to play</div>
+<div id='waitingIndicator' style='margin:1em'>Waiting for the other team to play</div>
 
+<div>
+    <table id="playerList">
+        <tr><td>test red cell</td></tr>
+    </table>
+</div>
 
 <div id='wordlist'>
   <table>
@@ -211,10 +42,10 @@ $(function() {
       <th>Assassin</th>
     <tr>
     <tr>
-      <td id='mineList'></td>
-      <td id='neutralList'></td>
-      <td id='enemyList'></td>
-      <td id='assassinList'></td>
+      <td><table id='mineList'></table></td>
+      <td><table id='neutralList'></table></td>
+      <td><table id='enemyList'></table></td>
+      <td><table id='assassinList'></table></td>
     </tr>
   </table>
 </div>
