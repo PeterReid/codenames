@@ -39,6 +39,7 @@ $(function() {
   cells[25].$elem = $passElem;
 
   function loadState(state) {
+    console.log('loading state', state);
     playingTeam = state.playingTeam;
     var cellStates = state.cells;
     for (var i=0; i<cells.length; i++) {
@@ -65,13 +66,9 @@ $(function() {
     var $playerList = $('#playerList');
     $playerList.find("tr").remove();
     var $tbody = $("<tbody></tbody>");
-    for (var i=0; i<state.voters['red'].length; i++) {
-      var voter = state.voters['red'][i];
-      $tbody.append("<tr><td class='player red'>" + voter + "</td></tr>");
-    }
-    for (var i=0; i<state.voters['blue'].length; i++) {
-      var voter = state.voters['blue'][i];
-      $tbody.append("<tr><td class='player blue'>" + voter + "</td></tr>");
+    for (var i=0; i<state.players.length; i++) {
+      var player = state.players[i];
+      $tbody.append("<tr><td class='player " + (player.team == 'red' ? "red" : "blue") + "'>" + player.name + "</td></tr>");
     }
     $playerList.append($tbody);
 
