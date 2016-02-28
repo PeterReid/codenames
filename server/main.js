@@ -115,7 +115,7 @@ Game.prototype.makeState = function() {
 Game.prototype.votersFor = function(team) {
   var players = [];
   for (var i=0; i<this.players.length; i++) {
-    if (this.players[i].team == team) {
+    if (this.players[i].team == team && !this.players[i].isSpymaster) {
       players.push(this.players[i]);
     }
   }
@@ -217,13 +217,14 @@ io.sockets.on('connection', function (socket) {
       id: playerId,
       name: generatePlayerName(),
       team: team,
-      spymaster: game.spymasterFor(team) == null
+      isSpymaster: game.spymasterFor(team) == null
     });
     game.players.push(player);
 
     
     socket.emit('youAreOn', team);
-    socket.emit('stateUpdate', game.makeState());
+    socket.emit('youAre', playerId);
+    game.broadcastState();
     
     if (player.isSpymaster) {
       socket.emit('showWordList', game.makeCellState(true));
@@ -241,6 +242,12 @@ io.sockets.on('connection', function (socket) {
       
       game.broadcastState();
     });
+    
+    socket.on('setName', function(name) {
+      player.name = name;
+      game.broadcastState();
+    });
+    
     
     socket.once('disconnect', function() {
       console.log('socket disconnected');
