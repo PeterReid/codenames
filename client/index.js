@@ -110,7 +110,7 @@ $(function() {
       }
 
       console.log(states[i]);
-      $('#' + appendTo).append( $('<div>').text(states[i].word) );
+      $('#' + appendTo).append( $('<tr><td>' + states[i].word + '</td></tr>') );
     }
   }
 
