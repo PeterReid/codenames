@@ -123,7 +123,7 @@ $(function() {
   function showWordList(states) {
     $('#wordlist').show();
     console.log(states);
-    for (var i=0; i<states.length; i++) {
+    for (var i=0; i<25; i++) {
       var appendTo = null;
       switch (states[i].color) {
         case myTeam: appendTo = 'mineList'; break;
